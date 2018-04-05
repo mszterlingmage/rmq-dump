@@ -7,6 +7,7 @@ use PhpAmqpLib\Connection\AMQPStreamConnection;
 use PhpAmqpLib\Message\AMQPMessage;
 use PhpAmqpLib\Wire\AMQPTable;
 use PhpAmqpLib\Exception\AMQPRuntimeException;
+use Phar;
 
 class Application {
 
@@ -14,13 +15,18 @@ class Application {
         $exchange = '_dumper_temp',
         $vhost = null,
         $current_queue = null,
-        $version = '0.0.3',
+        $version = '0.0.3a',
         $queue_list;
 
     function __construct() {
         $this->queue_list = array();
-        copy(__DIR__."/rabbitmqadmin", "/tmp/rabbitmqadmin");
-        chmod("/tmp/rabbitmqadmin", 0766);
+        copy(__DIR__."/rabbitmqadmin", $this->getCurrentDir() . "rabbitmqadmin");
+        chmod($this->getCurrentDir() . "rabbitmqadmin", 0766);
+    }
+
+    function getCurrentDir() {
+      $pathInfo = dirname(Phar::running(false));
+      return $pathInfo . '/';
     }
 
     function setCredentials($host, $port, $bport, $user, $pass) {
@@ -71,7 +77,7 @@ class Application {
     }
 
     function rmqAdminCall($command) {
-        $json = shell_exec("/tmp/rabbitmqadmin ".
+        $json = shell_exec($this->getCurrentDir() . "rabbitmqadmin ".
             "-u '{$this->user}' ".
             "--password='{$this->pass}' ".
             "-H {$this->host} ".
